@@ -6,15 +6,9 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `_run_server`, `get_app`, `list`
-// These types are ignored because they are not used by any `pub` functions: `LogMetrics`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `finish`, `tick`
-
-WebHandle runWebServer({required int port, required String path}) =>
-    RustLib.instance.api.crateApiWrapperRunWebServer(port: port, path: path);
-
-Future<void> zipDir({required String srcDir, required String dstDir}) =>
-    RustLib.instance.api.crateApiWrapperZipDir(srcDir: srcDir, dstDir: dstDir);
+// These functions are ignored because they are not marked as `pub`: `bind_until_success`, `done`, `list`, `new`, `run_server`
+// These types are ignored because they are not used by any `pub` functions: `MyState`, `StreamMetrics`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `finish`, `tick`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<WebHandle>>
 abstract class WebHandle implements RustOpaqueInterface {
@@ -23,4 +17,23 @@ abstract class WebHandle implements RustOpaqueInterface {
   set url(String url);
 
   void cancelServer();
+
+  Stream<String> run();
+}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Zipo>>
+abstract class Zipo implements RustOpaqueInterface {
+  String get dstDir;
+
+  set dstDir(String dstDir);
+
+  List<String> getList();
+
+  WebHandle getWebServer();
+
+  factory Zipo({required String srcDir, required String dstDir}) =>
+      RustLib.instance.api
+          .crateApiWrapperZipoNew(srcDir: srcDir, dstDir: dstDir);
+
+  Stream<int> run();
 }

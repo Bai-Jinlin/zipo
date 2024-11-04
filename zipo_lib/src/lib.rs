@@ -3,13 +3,13 @@ mod rule;
 mod setting;
 use anyhow::ensure;
 
-use crossbeam_queue::SegQueue;
-
 use std::io::prelude::*;
 use std::io::Write;
 use std::iter::Iterator;
 use std::ops::Deref;
 
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::thread;
 
 use zip::result::ZipError;
@@ -25,7 +25,7 @@ pub use setting::Settings;
 
 pub struct ZipDir {
     src_dir: PathBuf,
-    dirs: SegQueue<PathBuf>,
+    dirs: Arc<Mutex<Vec<(usize,PathBuf)>>>,
     dst_dir: PathBuf,
     settings: Settings,
     rules: RuleSet,
@@ -49,14 +49,15 @@ impl ZipDir {
 
         ensure!(!is_root(&src_dir), "src can't be root dir");
 
-        let dirs = SegQueue::new();
 
-        src_dir
+        let dirs=src_dir
             .read_dir()?
             .filter_map(|e| e.ok())
             .map(|e| e.path())
             .filter(|p| p.is_dir())
-            .for_each(|s| dirs.push(s));
+            .enumerate()
+            .collect();
+        let dirs = Arc::new(Mutex::new(dirs));
 
         let dst_dir = dst_dir.as_ref();
         if !dst_dir.exists() {
@@ -81,14 +82,23 @@ impl ZipDir {
             rules: rule_set,
         })
     }
+    
+    pub fn get_src_dir(&self)->Vec<String>{
+        let mut v:Vec<(usize, String)>=self.dirs.lock().unwrap().iter().map(|(i,p)|{
+            (*i,p.file_name().unwrap().to_string_lossy().into())
+        }).collect::<Vec<_>>();
+        v.sort_by_key(|(i,_)|*i);
+        v.into_iter().map(|(_,p)|p).collect()
+    }
 
     pub fn run(&mut self, m: impl Metrics) {
+
         thread::scope(|s| {
             for _ in 0..num_cpus::get() {
                 s.spawn({
                     let n = m.clone();
                     || loop {
-                        let dir = match self.dirs.pop() {
+                        let dir = match self.dirs.lock().unwrap().pop() {
                             Some(dir) => dir,
                             None => {
                                 //captrue n
@@ -96,7 +106,7 @@ impl ZipDir {
                                 return;
                             }
                         };
-                        if let Err(err) = self.zip_dir(&dir, &n) {
+                        if let Err(err) = self.zip_dir(dir, &n) {
                             log::debug!("{:?}",err);
                         }
                     }
@@ -106,22 +116,22 @@ impl ZipDir {
         m.finish();
     }
 
-    pub fn len(&self) -> usize {
-        self.dirs.len()
-    }
-    fn zip_dir(&self, src_dir: &Path, m: &impl Metrics) -> anyhow::Result<()> {
+    // pub fn len(&self) -> usize {
+    //     self.dirs.len()
+    // }
+    fn zip_dir(&self, (index,src_dir): (usize,PathBuf), m: &impl Metrics) -> anyhow::Result<()> {
         ensure!(src_dir.is_dir(), ZipError::FileNotFound);
 
-        let (dst_file_path, rule) = self.rules.get_match_rule(src_dir, &self.dst_dir);
+        let (dst_file_path, rule) = self.rules.get_match_rule(&src_dir, &self.dst_dir);
 
         let msg = format!(
             r#""{}" -> "{}""#,
-            dunce::simplified(src_dir).display(),
+            dunce::simplified(&src_dir).display(),
             dunce::simplified(&dst_file_path).display()
         );
 
         {
-            let walkdir = WalkDir::new(src_dir);
+            let walkdir = WalkDir::new(&src_dir);
             let file = File::create(&dst_file_path)?;
             let mut zip = zip::ZipWriter::new(file);
             let options =
@@ -134,7 +144,7 @@ impl ZipDir {
                     continue;
                 }
 
-                let name = rule.transform_path(path, src_dir, self.settings.is_separate);
+                let name = rule.transform_path(path, &src_dir, self.settings.is_separate);
 
                 if path.is_file() {
                     zip.start_file(path_to_string(&name), options)?;
@@ -150,24 +160,11 @@ impl ZipDir {
             zip.finish()?;
         }
 
-        m.tick(&msg);
+        m.tick(&msg,index);
 
         Ok(())
     }
 
-    pub fn remove_dir(&mut self) -> anyhow::Result<Vec<PathBuf>> {
-        let dirs = self
-            .src_dir
-            .read_dir()?
-            .filter_map(|e| e.ok())
-            .map(|e| e.path())
-            .filter(|p| p.is_dir())
-            .collect::<Vec<_>>();
-        for dir in &dirs {
-            fs::remove_dir_all(dir)?;
-        }
-        Ok(dirs)
-    }
 }
 
 fn path_to_string(path: &Path) -> String {
