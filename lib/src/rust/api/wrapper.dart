@@ -6,9 +6,9 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `bind_until_success`, `done`, `list`, `new`, `run_server`
-// These types are ignored because they are not used by any `pub` functions: `MyState`, `StreamMetrics`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `finish`, `tick`
+// These functions are ignored because they are not marked as `pub`: `bind_until_success`, `decode`, `done`, `list`, `new`, `run_server`
+// These types are ignored because they are not used by any `pub` functions: `DecodeRequest`, `MyState`, `StreamMetrics`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `finish`, `into`, `tick`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<WebHandle>>
 abstract class WebHandle implements RustOpaqueInterface {
@@ -31,9 +31,53 @@ abstract class Zipo implements RustOpaqueInterface {
 
   WebHandle getWebServer();
 
-  factory Zipo({required String srcDir, required String dstDir}) =>
-      RustLib.instance.api
-          .crateApiWrapperZipoNew(srcDir: srcDir, dstDir: dstDir);
+  factory Zipo(
+          {required String srcDir,
+          required String dstDir,
+          required ZipoSettings settings}) =>
+      RustLib.instance.api.crateApiWrapperZipoNew(
+          srcDir: srcDir, dstDir: dstDir, settings: settings);
 
   Stream<int> run();
+}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ZipoSettings>>
+abstract class ZipoSettings implements RustOpaqueInterface {
+  bool get isSeparate;
+
+  List<Rule> get rules;
+
+  set isSeparate(bool isSeparate);
+
+  set rules(List<Rule> rules);
+
+  factory ZipoSettings({required bool isSeparate}) => RustLib.instance.api
+      .crateApiWrapperZipoSettingsNew(isSeparate: isSeparate);
+
+  void pushRule({required Rule rule});
+}
+
+class Rule {
+  final String filename;
+  final List<String> excludes;
+
+  const Rule.raw({
+    required this.filename,
+    required this.excludes,
+  });
+
+  factory Rule({required String filename, required List<String> excludes}) =>
+      RustLib.instance.api
+          .crateApiWrapperRuleNew(filename: filename, excludes: excludes);
+
+  @override
+  int get hashCode => filename.hashCode ^ excludes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Rule &&
+          runtimeType == other.runtimeType &&
+          filename == other.filename &&
+          excludes == other.excludes;
 }

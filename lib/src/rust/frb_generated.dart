@@ -68,7 +68,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.5.1';
 
   @override
-  int get rustContentHash => -6718946;
+  int get rustContentHash => -1646359111;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -88,6 +88,23 @@ abstract class RustLibApi extends BaseApi {
 
   Stream<String> crateApiWrapperWebHandleRun({required WebHandle that});
 
+  bool crateApiWrapperZipoSettingsAutoAccessorGetIsSeparate(
+      {required ZipoSettings that});
+
+  List<Rule> crateApiWrapperZipoSettingsAutoAccessorGetRules(
+      {required ZipoSettings that});
+
+  void crateApiWrapperZipoSettingsAutoAccessorSetIsSeparate(
+      {required ZipoSettings that, required bool isSeparate});
+
+  void crateApiWrapperZipoSettingsAutoAccessorSetRules(
+      {required ZipoSettings that, required List<Rule> rules});
+
+  ZipoSettings crateApiWrapperZipoSettingsNew({required bool isSeparate});
+
+  void crateApiWrapperZipoSettingsPushRule(
+      {required ZipoSettings that, required Rule rule});
+
   String crateApiWrapperZipoAutoAccessorGetDstDir({required Zipo that});
 
   void crateApiWrapperZipoAutoAccessorSetDstDir(
@@ -97,11 +114,17 @@ abstract class RustLibApi extends BaseApi {
 
   WebHandle crateApiWrapperZipoGetWebServer({required Zipo that});
 
-  Zipo crateApiWrapperZipoNew({required String srcDir, required String dstDir});
+  Zipo crateApiWrapperZipoNew(
+      {required String srcDir,
+      required String dstDir,
+      required ZipoSettings settings});
 
   Stream<int> crateApiWrapperZipoRun({required Zipo that});
 
   Future<void> crateApiWrapperInitApp();
+
+  Rule crateApiWrapperRuleNew(
+      {required String filename, required List<String> excludes});
 
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_WebHandle;
@@ -116,6 +139,14 @@ abstract class RustLibApi extends BaseApi {
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Zipo;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ZipoPtr;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ZipoSettings;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ZipoSettings;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ZipoSettingsPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -233,13 +264,173 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  bool crateApiWrapperZipoSettingsAutoAccessorGetIsSeparate(
+      {required ZipoSettings that}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+            that, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiWrapperZipoSettingsAutoAccessorGetIsSeparateConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCrateApiWrapperZipoSettingsAutoAccessorGetIsSeparateConstMeta =>
+          const TaskConstMeta(
+            debugName: "ZipoSettings_auto_accessor_get_is_separate",
+            argNames: ["that"],
+          );
+
+  @override
+  List<Rule> crateApiWrapperZipoSettingsAutoAccessorGetRules(
+      {required ZipoSettings that}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+            that, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_rule,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiWrapperZipoSettingsAutoAccessorGetRulesConstMeta,
+      argValues: [that],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiWrapperZipoSettingsAutoAccessorGetRulesConstMeta =>
+      const TaskConstMeta(
+        debugName: "ZipoSettings_auto_accessor_get_rules",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiWrapperZipoSettingsAutoAccessorSetIsSeparate(
+      {required ZipoSettings that, required bool isSeparate}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+            that, serializer);
+        sse_encode_bool(isSeparate, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiWrapperZipoSettingsAutoAccessorSetIsSeparateConstMeta,
+      argValues: [that, isSeparate],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta
+      get kCrateApiWrapperZipoSettingsAutoAccessorSetIsSeparateConstMeta =>
+          const TaskConstMeta(
+            debugName: "ZipoSettings_auto_accessor_set_is_separate",
+            argNames: ["that", "isSeparate"],
+          );
+
+  @override
+  void crateApiWrapperZipoSettingsAutoAccessorSetRules(
+      {required ZipoSettings that, required List<Rule> rules}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+            that, serializer);
+        sse_encode_list_rule(rules, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiWrapperZipoSettingsAutoAccessorSetRulesConstMeta,
+      argValues: [that, rules],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiWrapperZipoSettingsAutoAccessorSetRulesConstMeta =>
+      const TaskConstMeta(
+        debugName: "ZipoSettings_auto_accessor_set_rules",
+        argNames: ["that", "rules"],
+      );
+
+  @override
+  ZipoSettings crateApiWrapperZipoSettingsNew({required bool isSeparate}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_bool(isSeparate, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData:
+            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiWrapperZipoSettingsNewConstMeta,
+      argValues: [isSeparate],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiWrapperZipoSettingsNewConstMeta =>
+      const TaskConstMeta(
+        debugName: "ZipoSettings_new",
+        argNames: ["isSeparate"],
+      );
+
+  @override
+  void crateApiWrapperZipoSettingsPushRule(
+      {required ZipoSettings that, required Rule rule}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+            that, serializer);
+        sse_encode_box_autoadd_rule(rule, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiWrapperZipoSettingsPushRuleConstMeta,
+      argValues: [that, rule],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiWrapperZipoSettingsPushRuleConstMeta =>
+      const TaskConstMeta(
+        debugName: "ZipoSettings_push_rule",
+        argNames: ["that", "rule"],
+      );
+
+  @override
   String crateApiWrapperZipoAutoAccessorGetDstDir({required Zipo that}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipo(
             that, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -266,7 +457,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipo(
             that, serializer);
         sse_encode_String(dstDir, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -291,7 +482,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipo(
             that, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_String,
@@ -315,7 +506,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipo(
             that, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
       },
       codec: SseCodec(
         decodeSuccessData:
@@ -336,13 +527,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Zipo crateApiWrapperZipoNew(
-      {required String srcDir, required String dstDir}) {
+      {required String srcDir,
+      required String dstDir,
+      required ZipoSettings settings}) {
     return handler.executeSync(SyncTask(
       callFfi: () {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(srcDir, serializer);
         sse_encode_String(dstDir, serializer);
-        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
+        sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+            settings, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
       },
       codec: SseCodec(
         decodeSuccessData:
@@ -350,14 +545,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         decodeErrorData: null,
       ),
       constMeta: kCrateApiWrapperZipoNewConstMeta,
-      argValues: [srcDir, dstDir],
+      argValues: [srcDir, dstDir, settings],
       apiImpl: this,
     ));
   }
 
   TaskConstMeta get kCrateApiWrapperZipoNewConstMeta => const TaskConstMeta(
         debugName: "Zipo_new",
-        argNames: ["srcDir", "dstDir"],
+        argNames: ["srcDir", "dstDir", "settings"],
       );
 
   @override
@@ -370,7 +565,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that, serializer);
         sse_encode_StreamSink_i_32_Sse(stream, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 10, port: port_);
+            funcId: 16, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -394,7 +589,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 11, port: port_);
+            funcId: 17, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -411,6 +606,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argNames: [],
       );
 
+  @override
+  Rule crateApiWrapperRuleNew(
+      {required String filename, required List<String> excludes}) {
+    return handler.executeSync(SyncTask(
+      callFfi: () {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(filename, serializer);
+        sse_encode_list_String(excludes, serializer);
+        return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_rule,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiWrapperRuleNewConstMeta,
+      argValues: [filename, excludes],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiWrapperRuleNewConstMeta => const TaskConstMeta(
+        debugName: "rule_new",
+        argNames: ["filename", "excludes"],
+      );
+
   RustArcIncrementStrongCountFnType
       get rust_arc_increment_strong_count_WebHandle => wire
           .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWebHandle;
@@ -424,6 +644,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Zipo =>
       wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipo;
+
+  RustArcIncrementStrongCountFnType
+      get rust_arc_increment_strong_count_ZipoSettings => wire
+          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings;
+
+  RustArcDecrementStrongCountFnType
+      get rust_arc_decrement_strong_count_ZipoSettings => wire
+          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -448,6 +676,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ZipoSettings
+      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ZipoSettingsImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   WebHandle
       dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWebHandle(
           dynamic raw) {
@@ -461,6 +697,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ZipoImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ZipoSettings
+      dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ZipoSettingsImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -480,6 +724,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ZipoSettings
+      dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ZipoSettingsImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   WebHandle
       dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWebHandle(
           dynamic raw) {
@@ -493,6 +745,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ZipoImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  ZipoSettings
+      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return ZipoSettingsImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -514,6 +774,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  Rule dco_decode_box_autoadd_rule(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_rule(raw);
+  }
+
+  @protected
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -529,6 +801,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<Rule> dco_decode_list_rule(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_rule).toList();
+  }
+
+  @protected
+  Rule dco_decode_rule(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return Rule.raw(
+      filename: dco_decode_String(arr[0]),
+      excludes: dco_decode_list_String(arr[1]),
+    );
   }
 
   @protected
@@ -575,6 +865,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ZipoSettings
+      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ZipoSettingsImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   WebHandle
       sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWebHandle(
           SseDeserializer deserializer) {
@@ -589,6 +888,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ZipoImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ZipoSettings
+      sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ZipoSettingsImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -611,6 +919,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ZipoSettings
+      sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ZipoSettingsImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   WebHandle
       sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWebHandle(
           SseDeserializer deserializer) {
@@ -625,6 +942,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ZipoImpl.frbInternalSseDecode(
+        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  ZipoSettings
+      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ZipoSettingsImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -647,6 +973,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  Rule sse_decode_box_autoadd_rule(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_rule(deserializer));
   }
 
   @protected
@@ -675,6 +1013,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<Rule> sse_decode_list_rule(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <Rule>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_rule(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  Rule sse_decode_rule(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_filename = sse_decode_String(deserializer);
+    var var_excludes = sse_decode_list_String(deserializer);
+    return Rule.raw(filename: var_filename, excludes: var_excludes);
+  }
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8();
@@ -689,12 +1047,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getBigUint64();
-  }
-
-  @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
   }
 
   @protected
@@ -724,6 +1076,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          ZipoSettings self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ZipoSettingsImpl).frbInternalSseEncode(move: true),
+        serializer);
+  }
+
+  @protected
+  void
       sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWebHandle(
           WebHandle self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -738,6 +1100,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
         (self as ZipoImpl).frbInternalSseEncode(move: false), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          ZipoSettings self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ZipoSettingsImpl).frbInternalSseEncode(move: false),
+        serializer);
   }
 
   @protected
@@ -760,6 +1132,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+      sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          ZipoSettings self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ZipoSettingsImpl).frbInternalSseEncode(move: false),
+        serializer);
+  }
+
+  @protected
+  void
       sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWebHandle(
           WebHandle self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -774,6 +1156,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
         (self as ZipoImpl).frbInternalSseEncode(move: null), serializer);
+  }
+
+  @protected
+  void
+      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipoSettings(
+          ZipoSettings self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+        (self as ZipoSettingsImpl).frbInternalSseEncode(move: null),
+        serializer);
   }
 
   @protected
@@ -809,6 +1201,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_rule(Rule self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_rule(self, serializer);
+  }
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
@@ -832,6 +1236,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_rule(List<Rule> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_rule(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_rule(Rule self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.filename, serializer);
+    sse_encode_list_String(self.excludes, serializer);
+  }
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self);
@@ -846,12 +1266,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
-  }
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
   }
 }
 
@@ -931,4 +1345,45 @@ class ZipoImpl extends RustOpaque implements Zipo {
   Stream<int> run() => RustLib.instance.api.crateApiWrapperZipoRun(
         that: this,
       );
+}
+
+@sealed
+class ZipoSettingsImpl extends RustOpaque implements ZipoSettings {
+  // Not to be used by end users
+  ZipoSettingsImpl.frbInternalDcoDecode(List<dynamic> wire)
+      : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  ZipoSettingsImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_ZipoSettings,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_ZipoSettings,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_ZipoSettingsPtr,
+  );
+
+  bool get isSeparate =>
+      RustLib.instance.api.crateApiWrapperZipoSettingsAutoAccessorGetIsSeparate(
+        that: this,
+      );
+
+  List<Rule> get rules =>
+      RustLib.instance.api.crateApiWrapperZipoSettingsAutoAccessorGetRules(
+        that: this,
+      );
+
+  set isSeparate(bool isSeparate) =>
+      RustLib.instance.api.crateApiWrapperZipoSettingsAutoAccessorSetIsSeparate(
+          that: this, isSeparate: isSeparate);
+
+  set rules(List<Rule> rules) =>
+      RustLib.instance.api.crateApiWrapperZipoSettingsAutoAccessorSetRules(
+          that: this, rules: rules);
+
+  void pushRule({required Rule rule}) => RustLib.instance.api
+      .crateApiWrapperZipoSettingsPushRule(that: this, rule: rule);
 }

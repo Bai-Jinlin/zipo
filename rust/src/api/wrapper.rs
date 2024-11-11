@@ -1,7 +1,11 @@
-use std::{net::TcpListener, path::Path};
+use std::{net::TcpListener, ops::Deref, path::Path};
 
 use crate::frb_generated::StreamSink;
-use axum::{extract::State, routing::{get, post}, Json, Router};
+use axum::{
+    extract::State,
+    routing::{get, post},
+    Json, Router,
+};
 use flutter_rust_bridge::frb;
 use local_ip_address::local_ip;
 use serde::Deserialize;
@@ -10,22 +14,67 @@ use tokio_util::sync::CancellationToken;
 use tower_http::services::ServeDir;
 use zipo_lib::{Metrics, Settings, ZipDir};
 
+#[derive(Clone)]
+pub struct Rule {
+    pub filename: String,
+    pub excludes: Vec<String>,
+}
+impl Rule {
+    #[frb(sync)]
+    pub fn new(filename: String, excludes: Vec<String>) -> Self {
+        Self { filename, excludes }
+    }
+}
+
+#[frb(opaque)]
+pub struct ZipoSettings {
+    pub is_separate: bool,
+    pub rules: Vec<Rule>,
+}
+impl ZipoSettings {
+    #[frb(sync)]
+    pub fn new(is_separate: bool) -> Self {
+        Self {
+            is_separate,
+            rules: Vec::new(),
+        }
+    }
+    #[frb(sync)]
+    pub fn push_rule(&mut self, rule: Rule) {
+        self.rules.push(rule);
+    }
+}
+
+impl Into<Settings> for ZipoSettings {
+    fn into(self) -> Settings {
+        let mut rules = Vec::new();
+        for rule in self.rules {
+            let e = rule.excludes.iter().map(Deref::deref).collect::<Vec<_>>();
+            let rule = zipo_lib::Rule::new(&rule.filename, &e);
+            rules.push(rule);
+        }
+        Settings {
+            is_separate: self.is_separate,
+            rules,
+        }
+    }
+}
 
 #[derive(Clone)]
-struct MyState{
-    path:String,
-    stream:StreamSink<String>
+struct MyState {
+    path: String,
+    stream: StreamSink<String>,
 }
 #[derive(Deserialize)]
-struct DecodeRequest{
-    filename:String
+struct DecodeRequest {
+    filename: String,
 }
 
-async fn decode(Json(DecodeRequest{filename}):Json<DecodeRequest>)->String{
+async fn decode(Json(DecodeRequest { filename }): Json<DecodeRequest>) -> String {
     urlencoding::decode(&filename).unwrap().into()
 }
 
-async fn list(State(state):State<MyState>) -> String {
+async fn list(State(state): State<MyState>) -> String {
     let dir = std::fs::read_dir(state.path).unwrap();
     let mut ret = String::new();
 
@@ -46,21 +95,23 @@ async fn list(State(state):State<MyState>) -> String {
     }
     ret
 }
-async fn done(State(state):State<MyState>){
+async fn done(State(state): State<MyState>) {
     state.stream.add("done".to_string()).unwrap();
 }
 
-async fn run_server(listener: TcpListener, path: String, token: CancellationToken,stream:StreamSink<String>) {
+async fn run_server(
+    listener: TcpListener,
+    path: String,
+    token: CancellationToken,
+    stream: StreamSink<String>,
+) {
     let serve_dir = ServeDir::new(&path);
-    let app=Router::new()
+    let app = Router::new()
         .nest_service("/files", serve_dir)
         .route("/list", get(list))
         .route("/decode", post(decode))
         .route("/done", get(done))
-        .with_state(MyState{
-            stream,
-            path
-        });
+        .with_state(MyState { stream, path });
     axum::serve(tokio::net::TcpListener::from_std(listener).unwrap(), app)
         .with_graceful_shutdown(token.cancelled_owned())
         .await
@@ -72,11 +123,10 @@ fn bind_until_success() -> (TcpListener, u16) {
     loop {
         if let Ok(listener) = std::net::TcpListener::bind(("0.0.0.0", port)) {
             break (listener, port);
-        } 
+        }
         port += 1;
     }
 }
-
 
 #[derive(Clone)]
 #[frb(opaque)]
@@ -102,10 +152,9 @@ pub struct Zipo {
 }
 impl Zipo {
     #[frb(sync)]
-    pub fn new(src_dir: String, dst_dir: String) -> Self {
-        let settings = Settings::new().unwrap();
+    pub fn new(src_dir: String, dst_dir: String, settings: ZipoSettings) -> Self {
         let dst_dir_path: &Path = dst_dir.as_ref();
-        let z = ZipDir::new(src_dir, &dst_dir_path, settings).unwrap();
+        let z = ZipDir::new(src_dir, &dst_dir_path, settings.into()).unwrap();
         Self { z, dst_dir }
     }
     #[frb(sync)]
@@ -117,7 +166,7 @@ impl Zipo {
         self.z.run(StreamMetrics::new(stream));
     }
     #[frb(sync)]
-    pub fn get_web_server(self) -> WebHandle{
+    pub fn get_web_server(self) -> WebHandle {
         let token = CancellationToken::new();
         let (listener, port) = bind_until_success();
         let ip = local_ip().unwrap().to_string();
@@ -125,35 +174,35 @@ impl Zipo {
         WebHandle {
             token,
             url,
-            listener:Some(listener),
+            listener: Some(listener),
             dst_dir: self.dst_dir.clone(),
         }
-
     }
-
 }
 pub struct WebHandle {
     token: CancellationToken,
     pub url: String,
-    listener : Option<TcpListener>,
-    dst_dir:String,
+    listener: Option<TcpListener>,
+    dst_dir: String,
 }
 impl WebHandle {
     #[frb(sync)]
     pub fn cancel_server(self) {
         self.token.cancel();
     }
-    
-    pub fn run(&mut self,stream:StreamSink<String>){
+
+    pub fn run(&mut self, stream: StreamSink<String>) {
         let listener = self.listener.take().unwrap();
         let path = self.dst_dir.clone();
-        let token = self.token.clone(); 
+        let token = self.token.clone();
 
-        std::thread::spawn(move||{
+        std::thread::spawn(move || {
             // need new Runtime ,FLUTTER_RUST_BRIDGE_HANDLER.async_runtime() have error,maybe stream blocked runtime?
-            Runtime::new().unwrap().block_on(
-                run_server(listener, path, token, stream)
-            );
+            // let runtime = tokio::runtime::Builder::new_current_thread()
+            //     .build()
+            //     .unwrap();
+            let runtime = Runtime::new().unwrap();
+            runtime.block_on(run_server(listener, path, token, stream));
         });
     }
 }

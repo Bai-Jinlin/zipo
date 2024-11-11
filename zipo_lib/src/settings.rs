@@ -1,17 +1,21 @@
 use std::path::{self, Path, PathBuf};
 
 use regex::Regex;
+pub struct Settings {
+    pub is_separate: bool,
+    pub rules:Vec<Rule>,
+}
 
 pub struct Rule {
-    regex: Regex,
+    filename: Regex,
     excludes: Vec<Regex>,
 }
 
 impl Rule {
-    pub fn new<'a>(regex: &str, excludes: impl Iterator<Item = &'a str>) -> Self {
+    pub fn new<'a>(regex: &str, excludes: &[&str]) -> Self {
         let regex = Regex::new(regex).unwrap();
-        let excludes = excludes.map(|r| Regex::new(r).unwrap()).collect();
-        Self { regex, excludes }
+        let excludes = excludes.into_iter().map(|r| Regex::new(r).unwrap()).collect();
+        Self { filename: regex, excludes }
     }
 
     pub fn match_rule(&self, src_dir: &Path, dst_dir: &Path) -> Option<PathBuf> {
@@ -62,7 +66,7 @@ impl Rule {
     }
 
     fn get_cap<'s>(&self, haystack: &'s str) -> Option<&'s str> {
-        if let Some(caps) = self.regex.captures(haystack) {
+        if let Some(caps) = self.filename.captures(haystack) {
             // regex all have capsgroup
             let m = caps.get(1).unwrap();
             return Some(m.as_str());
@@ -73,15 +77,9 @@ impl Rule {
 
 pub struct RuleSet(Vec<Rule>);
 
-impl Default for RuleSet {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl RuleSet {
     pub fn new() -> Self {
-        let default_rule = Rule::new("(.*)", [].into_iter());
+        let default_rule = Rule::new("(.*)", &[]);
         let mut v = Vec::new();
         v.push(default_rule);
         Self(v)
@@ -108,7 +106,7 @@ mod test {
         use crate::{Rule, RuleSet};
         use std::path::Path;
         let mut s = RuleSet::new();
-        let eh_rule = Rule::new(r#"\d-(.*)"#, [r#"^\.asd$"#, r#"^\.zxc$"#].into_iter());
+        let eh_rule = Rule::new(r#"\d-(.*)"#, &[r#"^\.asd$"#, r#"^\.zxc$"#]);
         s.push_rule(eh_rule);
 
         {
@@ -134,7 +132,7 @@ mod test {
         use std::path::Path;
         let rule = Rule::new(
             r#"\d-(.*)"#,
-            [r#"^\.ehviewer$"#, r#"^\.thumb$"#].into_iter(),
+            &[r#"^\.ehviewer$"#, r#"^\.thumb$"#],
         );
         {
             let ret = rule.transform_path(

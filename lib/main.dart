@@ -5,10 +5,12 @@ import 'package:zipo/src/rust/frb_generated.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as p;
 import 'package:zipo/web_server.dart';
+import 'package:zipo/settings.dart' as s;
 
 void main() async {
   await RustLib.init();
   runApp(const MyApp());
+  // runApp(const TestApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -66,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
       msg.showSnackBar(const SnackBar(content: Text("please select folder")));
     }
     var dst = p.join(path!, "temp");
-    _zipo = Zipo(srcDir: path, dstDir: dst);
+    _zipo = Zipo(srcDir: path, dstDir: dst, settings: s.defaultSettings);
 
     setState(() {
       _list = ItemList(_zipo!.getList());
@@ -144,7 +146,8 @@ class _MyHomePageState extends State<MyHomePage> {
         itemBuilder: (context, index) {
           var (filename, isDone) = _list!.filesState[index];
           return ListTile(
-              title: Text(filename),
+              title:
+                  Text(filename, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: isDone
                   ? const Icon(Icons.done)
                   : const CircularProgressIndicator());

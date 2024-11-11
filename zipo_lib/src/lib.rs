@@ -1,12 +1,10 @@
 mod metrics;
-mod rule;
-mod setting;
+mod settings;
 use anyhow::ensure;
 
 use std::io::prelude::*;
 use std::io::Write;
 use std::iter::Iterator;
-use std::ops::Deref;
 
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -19,15 +17,14 @@ use std::fs::{self, File};
 use std::path::{self, Path, PathBuf};
 use walkdir::WalkDir;
 
-pub use metrics::{Metrics,NoMetrics};
-pub use rule::{Rule, RuleSet};
-pub use setting::Settings;
+pub use metrics::{Metrics, NoMetrics};
+pub use settings::{Rule, RuleSet,Settings};
 
 pub struct ZipDir {
     src_dir: PathBuf,
-    dirs: Arc<Mutex<Vec<(usize,PathBuf)>>>,
+    dirs: Arc<Mutex<Vec<(usize, PathBuf)>>>,
     dst_dir: PathBuf,
-    settings: Settings,
+    is_separate:bool,
     rules: RuleSet,
 }
 
@@ -49,8 +46,7 @@ impl ZipDir {
 
         ensure!(!is_root(&src_dir), "src can't be root dir");
 
-
-        let dirs=src_dir
+        let dirs = src_dir
             .read_dir()?
             .filter_map(|e| e.ok())
             .map(|e| e.path())
@@ -67,32 +63,33 @@ impl ZipDir {
 
         ensure!(dst_dir.is_dir(), "dst dir isn't dir");
         let mut rule_set = RuleSet::new();
-        if let Some(rules) = &settings.rules {
-            for rule in rules {
-                let r = Rule::new(&rule.filename, rule.excludes.iter().map(|s| s.deref()));
-                rule_set.push_rule(r);
-            }
+        for rule in settings.rules {
+            // let r = Rule::new(&rule.filename, rule.excludes.iter().map(|s| s.deref()));
+            rule_set.push_rule(rule);
         }
 
         Ok(Self {
             src_dir,
             dirs,
             dst_dir,
-            settings,
+            is_separate:settings.is_separate,
             rules: rule_set,
         })
     }
-    
-    pub fn get_src_dir(&self)->Vec<String>{
-        let mut v:Vec<(usize, String)>=self.dirs.lock().unwrap().iter().map(|(i,p)|{
-            (*i,p.file_name().unwrap().to_string_lossy().into())
-        }).collect::<Vec<_>>();
-        v.sort_by_key(|(i,_)|*i);
-        v.into_iter().map(|(_,p)|p).collect()
+
+    pub fn get_src_dir(&self) -> Vec<String> {
+        let mut v: Vec<(usize, String)> = self
+            .dirs
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|(i, p)| (*i, p.file_name().unwrap().to_string_lossy().into()))
+            .collect::<Vec<_>>();
+        v.sort_by_key(|(i, _)| *i);
+        v.into_iter().map(|(_, p)| p).collect()
     }
 
     pub fn run(&mut self, m: impl Metrics) {
-
         thread::scope(|s| {
             for _ in 0..num_cpus::get() {
                 s.spawn({
@@ -107,7 +104,7 @@ impl ZipDir {
                             }
                         };
                         if let Err(err) = self.zip_dir(dir, &n) {
-                            log::debug!("{:?}",err);
+                            log::debug!("{:?}", err);
                         }
                     }
                 });
@@ -116,10 +113,7 @@ impl ZipDir {
         m.finish();
     }
 
-    // pub fn len(&self) -> usize {
-    //     self.dirs.len()
-    // }
-    fn zip_dir(&self, (index,src_dir): (usize,PathBuf), m: &impl Metrics) -> anyhow::Result<()> {
+    fn zip_dir(&self, (index, src_dir): (usize, PathBuf), m: &impl Metrics) -> anyhow::Result<()> {
         ensure!(src_dir.is_dir(), ZipError::FileNotFound);
 
         let (dst_file_path, rule) = self.rules.get_match_rule(&src_dir, &self.dst_dir);
@@ -144,7 +138,7 @@ impl ZipDir {
                     continue;
                 }
 
-                let name = rule.transform_path(path, &src_dir, self.settings.is_separate);
+                let name = rule.transform_path(path, &src_dir, self.is_separate);
 
                 if path.is_file() {
                     zip.start_file(path_to_string(&name), options)?;
@@ -160,11 +154,10 @@ impl ZipDir {
             zip.finish()?;
         }
 
-        m.tick(&msg,index);
+        m.tick(&msg, index);
 
         Ok(())
     }
-
 }
 
 fn path_to_string(path: &Path) -> String {
