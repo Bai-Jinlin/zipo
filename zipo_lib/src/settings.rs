@@ -1,21 +1,50 @@
 use std::path::{self, Path, PathBuf};
 
 use regex::Regex;
+/// is_separte:true               
+/// filename:\d-(.*)              
+/// excludes:[f2]                 
+/// /path/123-file ────► file.zip
+///       ├───f1        file      
+///       ├───f2        ├───f1    
+///       └───f3        └───f3    
+///                               
+/// is_separate:false             
+/// /path/file ────► file.zip    
+///       ├───f1      ├───f1      
+///       ├───f2      ├───f2      
+///       └───f3      └───f3      
+#[derive(Clone)]
 pub struct Settings {
     pub is_separate: bool,
-    pub rules:Vec<Rule>,
+    pub rules:RuleSet,
+}
+impl Settings{
+    pub fn new()->Self{
+        Self{
+            is_separate:false,
+            rules:RuleSet::new()
+        }
+    }
+    pub fn set_separate(&mut self){
+        self.is_separate=true;
+    }
+    pub fn push_rule(&mut self,r:Rule){
+        self.rules.push_rule(r);
+    }
 }
 
+#[derive(Clone)]
 pub struct Rule {
     filename: Regex,
     excludes: Vec<Regex>,
 }
 
 impl Rule {
-    pub fn new<'a>(regex: &str, excludes: &[&str]) -> Self {
-        let regex = Regex::new(regex).unwrap();
+    pub fn new<'a>(filename: &str, excludes: &[String]) -> Self {
+        let filename = Regex::new(filename).unwrap();
         let excludes = excludes.into_iter().map(|r| Regex::new(r).unwrap()).collect();
-        Self { filename: regex, excludes }
+        Self { filename, excludes }
     }
 
     pub fn match_rule(&self, src_dir: &Path, dst_dir: &Path) -> Option<PathBuf> {
@@ -75,6 +104,7 @@ impl Rule {
     }
 }
 
+#[derive(Clone)]
 pub struct RuleSet(Vec<Rule>);
 
 impl RuleSet {
@@ -106,7 +136,7 @@ mod test {
         use crate::{Rule, RuleSet};
         use std::path::Path;
         let mut s = RuleSet::new();
-        let eh_rule = Rule::new(r#"\d-(.*)"#, &[r#"^\.asd$"#, r#"^\.zxc$"#]);
+        let eh_rule = Rule::new(r#"\d-(.*)"#, &[r#"^\.asd$"#.to_string(), r#"^\.zxc$"#.to_string()]);
         s.push_rule(eh_rule);
 
         {
@@ -132,7 +162,7 @@ mod test {
         use std::path::Path;
         let rule = Rule::new(
             r#"\d-(.*)"#,
-            &[r#"^\.ehviewer$"#, r#"^\.thumb$"#],
+            &[r#"^\.ehviewer$"#.to_string(), r#"^\.thumb$"#.to_string()],
         );
         {
             let ret = rule.transform_path(

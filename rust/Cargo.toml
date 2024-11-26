@@ -1,5 +1,6 @@
 [package]
-name = "rust_lib_flutter_application_test"
+# name = "rust_lib_flutter_application_test"
+name = "rust_lib_zipo"
 version = "0.1.0"
 edition = "2021"
 
@@ -18,3 +19,4 @@ tokio-util = "0.7.12"
 tower-http = { version = "0.6.1", features = ["fs","trace"] }
 urlencoding = "2.1.3"
 zipo_lib = {path ="../zipo_lib"}
+# tracing-subscriber = { version = "0.3", features = ["env-filter"] }

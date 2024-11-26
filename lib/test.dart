@@ -49,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    data = List.generate(5, (i)  {
+    data = List.generate(5, (i) {
       return JustData(generateRandomString(60));
     });
   }
@@ -65,12 +65,24 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildBody() {
-    return ListView.builder(
-        prototypeItem: const ListTile(title: Text("1"),),
-        itemCount: data.length,
-        itemBuilder: (context, index) {
-          return ListTile(title: Text(data[index].str,maxLines: 1,),trailing: CircularProgressIndicator(),);
-        }
-        );
+    var c = Container(
+      margin: EdgeInsets.symmetric(vertical: 70, horizontal: 50),
+      // constraints: BoxConstraints.tightFor(width: 200.0, height: 150.0),//卡片大小
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          colors: [Colors.red, Colors.orange],
+          center: Alignment.topLeft,
+          radius: .98,
+        ),
+      ),
+      alignment: Alignment.center, //卡片内文字居中
+      child: _foo(),
+    );
+
+    return Center(child: c);
+  }
+
+  Widget _foo() {
+    return Text("asd");
   }
 }

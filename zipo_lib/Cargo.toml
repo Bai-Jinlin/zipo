@@ -7,16 +7,10 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.79"
-# config = "0.13.4"
 crossbeam-queue = "0.3.11"
 dunce = "1.0.4"
 log = "0.4.22"
-# indicatif = { version = "0.17.7", features = ["rayon"] }
-# inquire = "0.6.2"
 num_cpus = "1.16.0"
 regex = "1.10.2"
-serde = { version = "1.0.195", features = ["derive"] }
-# simple_logger = "4.3.3"
-toml = "0.8.8"
 walkdir = "2.4.0"
 zip = { version = "0.6.6",default-features = false, features = ["deflate"] }

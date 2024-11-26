@@ -24,8 +24,7 @@ pub struct ZipDir {
     src_dir: PathBuf,
     dirs: Arc<Mutex<Vec<(usize, PathBuf)>>>,
     dst_dir: PathBuf,
-    is_separate:bool,
-    rules: RuleSet,
+    settings:Settings
 }
 
 impl ZipDir {
@@ -62,18 +61,16 @@ impl ZipDir {
         let dst_dir = dst_dir.canonicalize()?;
 
         ensure!(dst_dir.is_dir(), "dst dir isn't dir");
-        let mut rule_set = RuleSet::new();
-        for rule in settings.rules {
-            // let r = Rule::new(&rule.filename, rule.excludes.iter().map(|s| s.deref()));
-            rule_set.push_rule(rule);
-        }
+        // for rule in settings.rules {
+        //     // let r = Rule::new(&rule.filename, rule.excludes.iter().map(|s| s.deref()));
+        //     rule_set.push_rule(rule);
+        // }
 
         Ok(Self {
             src_dir,
             dirs,
             dst_dir,
-            is_separate:settings.is_separate,
-            rules: rule_set,
+            settings
         })
     }
 
@@ -116,7 +113,7 @@ impl ZipDir {
     fn zip_dir(&self, (index, src_dir): (usize, PathBuf), m: &impl Metrics) -> anyhow::Result<()> {
         ensure!(src_dir.is_dir(), ZipError::FileNotFound);
 
-        let (dst_file_path, rule) = self.rules.get_match_rule(&src_dir, &self.dst_dir);
+        let (dst_file_path, rule) = self.settings.rules.get_match_rule(&src_dir, &self.dst_dir);
 
         let msg = format!(
             r#""{}" -> "{}""#,
@@ -138,7 +135,7 @@ impl ZipDir {
                     continue;
                 }
 
-                let name = rule.transform_path(path, &src_dir, self.is_separate);
+                let name = rule.transform_path(path, &src_dir, self.settings.is_separate);
 
                 if path.is_file() {
                     zip.start_file(path_to_string(&name), options)?;
