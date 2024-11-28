@@ -1,15 +1,15 @@
-use std::{net::TcpListener, path::Path};
+use std::path::Path;
 
-use crate::frb_generated::{StreamSink, FLUTTER_RUST_BRIDGE_HANDLER};
+use crate::frb_generated::StreamSink;
 use axum::{
     extract::State,
     routing::{get, post},
     Json, Router,
 };
-use flutter_rust_bridge::{frb, BaseAsyncRuntime};
+use flutter_rust_bridge::frb;
 use local_ip_address::local_ip;
 use serde::Deserialize;
-use tokio::runtime::Runtime;
+use tokio::net::TcpListener;
 use tokio_util::sync::CancellationToken;
 use tower_http::services::ServeDir;
 use zipo_lib::{Metrics, Rule, Settings, ZipDir};
@@ -88,16 +88,17 @@ async fn run_server(
         .route("/decode", post(decode))
         .route("/stop", get(stop))
         .with_state(MyState { stream, path });
-    axum::serve(tokio::net::TcpListener::from_std(listener).unwrap(), app)
+    axum::serve(listener, app)
         .with_graceful_shutdown(token.cancelled_owned())
         .await
         .unwrap();
+    log::debug!("web server canceled");
 }
 
-fn bind_until_success() -> (TcpListener, u16) {
+async fn bind_until_success() -> (TcpListener, u16) {
     let mut port = 8080;
     loop {
-        if let Ok(listener) = std::net::TcpListener::bind(("0.0.0.0", port)) {
+        if let Ok(listener) = TcpListener::bind(("0.0.0.0", port)).await {
             break (listener, port);
         }
         port += 1;
@@ -115,6 +116,7 @@ impl StreamMetrics {
         Self { stream }
     }
 }
+
 impl Metrics for StreamMetrics {
     fn tick(&self, _msg: &str, index: usize) {
         self.stream.add(index as _).unwrap();
@@ -141,13 +143,14 @@ impl Zipo {
     pub fn run(&mut self, stream: StreamSink<i32>) {
         self.z.run(StreamMetrics::new(stream));
     }
+
     pub fn clear(self) {
         std::fs::remove_dir_all(self.dst_dir).unwrap();
     }
-    #[frb(sync)]
-    pub fn get_web_server(&self) -> WebHandle {
+
+    pub async fn get_web_server(&self) -> WebHandle {
         let token = CancellationToken::new();
-        let (listener, port) = bind_until_success();
+        let (listener, port) = bind_until_success().await;
         let ip = local_ip().unwrap().to_string();
         let url = format!("http://{}:{}", ip, port);
         WebHandle {
@@ -166,37 +169,18 @@ pub struct WebHandle {
 }
 impl WebHandle {
     #[frb(sync)]
-    pub fn cancel_server(self) {
+    pub fn cancel_server(&self) {
         self.token.cancel();
     }
-
-    pub fn run(&mut self, stream: StreamSink<String>) {
+    pub async fn run(&mut self, stream: StreamSink<String>) {
         let listener = self.listener.take().unwrap();
         let path = self.dst_dir.clone();
         let token = self.token.clone();
-        // FLUTTER_RUST_BRIDGE_HANDLER
-        //     .async_runtime()
-        //     .spawn(run_server(listener, path, token, stream));
-
-        std::thread::spawn(move || {
-            // need new Runtime ,FLUTTER_RUST_BRIDGE_HANDLER.async_runtime() have error,maybe stream blocked runtime?
-            let runtime = Runtime::new().unwrap();
-            let _guard = runtime.enter();
-            runtime.block_on(run_server(listener, path, token, stream));
-            log::debug!("web server cancel");
-        });
+        flutter_rust_bridge::spawn(run_server(listener, path, token, stream));
     }
 }
 
 #[frb(init)]
 pub fn init_app() {
-    // use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-    // tracing_subscriber::registry()
-    // .with(
-    //     tracing_subscriber::EnvFilter::try_from_default_env()
-    //         .unwrap_or_else(|_| format!("{}=trace", "zipo").into()),
-    // )
-    // .with(tracing_subscriber::fmt::layer())
-    // .init();
     flutter_rust_bridge::setup_default_user_utils();
 }

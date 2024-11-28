@@ -98,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _gotoNext() async {
-    var handle = _zipo!.getWebServer();
+    var handle = await _zipo!.getWebServer();
     await Navigator.push(context, MaterialPageRoute(builder: (context) {
       return WebServerPage(handle, _autoGoto);
     }));

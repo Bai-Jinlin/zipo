@@ -22,7 +22,7 @@ class _WebServerPageState extends State<WebServerPage> {
     _url = widget._handle.url;
     widget._handle.run().listen((status) {
       if (widget._aotoGoto && status == "stop") {
-        _pop();
+        Navigator.pop(context);
         return;
       }
       setState(() {
@@ -31,14 +31,10 @@ class _WebServerPageState extends State<WebServerPage> {
     });
   }
 
-  void _pop() {
-    Navigator.pop(context);
-  }
-
   @override
-  void dispose() async {
-    widget._handle.cancelServer();
+  void dispose() {
     super.dispose();
+    widget._handle.cancelServer();
   }
 
   @override
